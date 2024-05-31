@@ -29,6 +29,15 @@ int main(void)
     MX_USART2_UART_Init();
     MX_TIM2_Init();
 
+//__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 100);
+
+    while(1){
+    	PlayNote2(5000);
+    	HAL_Delay(1000);
+    	PlayNote2(300);
+    	HAL_Delay(1000);
+    }
+
     HAL_UART_Receive_IT(&huart2, &rx_data, 1);
 
     while (1)
@@ -106,7 +115,7 @@ static void MX_TIM2_Init(void)
     TIM_OC_InitTypeDef sConfigOC = {0};
 
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 0;
+    htim2.Init.Prescaler = 691;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
     htim2.Init.Period = 1000000 / 440 - 1; // Default period for 440 Hz (A4)
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -180,8 +189,8 @@ void PlayNote1(uint16_t frequency) {
 
 void PlayNote2(uint16_t frequency) {
     uint16_t period = 1000000 / frequency - 1;
-    __HAL_TIM_SET_AUTORELOAD(&htim2, period);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, period / 2);
+//__HAL_TIM_SET_AUTORELOAD(&htim2, period);
+    htim2.Instance->CCR1 = frequency;
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 }
 
