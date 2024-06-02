@@ -17,6 +17,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -27,6 +28,7 @@ TIM_HandleTypeDef htim2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_USART2_UART_Init(void);
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void set_PWM_frequency(TIM_HandleTypeDef *htim, uint32_t channel, uint32_t frequency);
 
@@ -62,7 +64,6 @@ uint32_t note_frequencies[] = {
   880,
   932,
   987,
-
 };
 
 #define NUM_NOTES (sizeof(note_frequencies)/sizeof(note_frequencies[0]))
@@ -98,6 +99,8 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();  // Initialize UART
+
   /* USER CODE BEGIN 2 */
 
   // turn on the PWM
@@ -107,12 +110,21 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t receivedChar;
   while (1)
   {
-    for (int i = 0; i < NUM_NOTES; ++i)
+    // Wait to receive a character from UART
+    if (HAL_UART_Receive(&huart2, &receivedChar, 1, HAL_MAX_DELAY) == HAL_OK)
     {
-      set_PWM_frequency(&htim2, TIM_CHANNEL_1, note_frequencies[i]);
-      HAL_Delay(500);  // wait for 500 ms
+      // Convert received character to an index
+      int note_index = receivedChar - 'a'; // assuming 'a' is the first note, 'b' the second, etc.
+
+      // Check if the index is within the valid range
+      if (note_index >= 0 && note_index < NUM_NOTES)
+      {
+        // Set PWM frequency to the corresponding note
+        set_PWM_frequency(&htim2, TIM_CHANNEL_1, note_frequencies[note_index]);
+      }
     }
   }
   /* USER CODE END WHILE */
@@ -218,6 +230,23 @@ static void MX_TIM2_Init(void)
   HAL_TIM_MspPostInit(&htim2);
 }
 
+/* USART2 init function */
+static void MX_USART2_UART_Init(void)
+{
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 9600;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+}
+
 void set_PWM_frequency(TIM_HandleTypeDef *htim, uint32_t channel, uint32_t frequency)
 {
   uint32_t timer_clock = HAL_RCC_GetPCLK1Freq() * 2;  // APB1 clock frequency
@@ -270,5 +299,3 @@ void assert_failed(uint8_t* file, uint32_t line)
 #endif /* USE_FULL_ASSERT */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
-
-
