@@ -1,13 +1,13 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body
+  * @brief          : Corps principal du programme
   ******************************************************************************
   * COPYRIGHT(c) 2024 STMicroelectronics
   ******************************************************************************
   */
 
-/* Includes ------------------------------------------------------------------*/
+/* Inclusions ----------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
 
@@ -15,16 +15,16 @@
 
 /* USER CODE END Includes */
 
-/* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim2;
-UART_HandleTypeDef huart2;
+/* Variables privées ---------------------------------------------------------*/
+TIM_HandleTypeDef htim2; // Gestionnaire pour le timer 2
+UART_HandleTypeDef huart2; // Gestionnaire pour l'UART 2
 
 /* USER CODE BEGIN PV */
-/* Private variables ---------------------------------------------------------*/
+/* Variables privées ---------------------------------------------------------*/
 
 /* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
+/* Prototypes de fonctions privées -------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
@@ -33,45 +33,46 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void set_PWM_frequency(TIM_HandleTypeDef *htim, uint32_t channel, uint32_t frequency);
 
 /* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
+/* Prototypes de fonctions privées -------------------------------------------*/
 
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
 
+// Tableau des fréquences des notes (en Hz)
 uint32_t note_frequencies[] = {
   261,  // do (C4)
-  277,
+  277,  // do# (C#4)
   293,  // re (D4)
-  311,
+  311,  // re# (D#4)
   329,  // mi (E4)
-  349,
-  369,  // fa (F4)
+  349,  // fa (F4)
+  369,  // fa# (F#4)
   392,  // sol (G4)
-  415,
+  415,  // sol# (G#4)
   440,  // la (A4)
-  466,
+  466,  // la# (A#4)
   493,  // si (B4)
-  523,   // do (C5)
-  554,
-  587,
-  622,
-  659,
-  698,
-  739,
-  783,
-  830,
-  880,
-  932,
-  987,
+  523,  // do (C5)
+  554,  // do# (C#5)
+  587,  // re (D5)
+  622,  // re# (D#5)
+  659,  // mi (E5)
+  698,  // fa (F5)
+  739,  // fa# (F#5)
+  783,  // sol (G5)
+  830,  // sol# (G#5)
+  880,  // la (A5)
+  932,  // la# (A#5)
+  987,  // si (B5)
 };
 
-#define NUM_NOTES (sizeof(note_frequencies)/sizeof(note_frequencies[0]))
+#define NUM_NOTES (sizeof(note_frequencies)/sizeof(note_frequencies[0])) // Nombre total de notes
 
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
+  * @brief  Point d'entrée de l'application.
   * @retval None
   */
 int main(void)
@@ -80,49 +81,49 @@ int main(void)
 
   /* USER CODE END 1 */
 
-  /* MCU Configuration----------------------------------------------------------*/
+  /* Configuration du MCU ----------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  /* Réinitialisation de tous les périphériques, initialisation de l'interface Flash et du Systick */
   HAL_Init();
 
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
-  /* Configure the system clock */
+  /* Configuration de l'horloge système */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
+  /* Initialisation de tous les périphériques configurés */
   MX_GPIO_Init();
   MX_TIM2_Init();
-  MX_USART2_UART_Init();  // Initialize UART
+  MX_USART2_UART_Init();  // Initialisation de l'UART
 
   /* USER CODE BEGIN 2 */
 
-  // turn on the PWM
+  // Démarrer le PWM sur le canal 1 du timer 2
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
   /* USER CODE END 2 */
 
-  /* Infinite loop */
+  /* Boucle infinie */
   /* USER CODE BEGIN WHILE */
-  uint8_t receivedChar;
+  uint8_t receivedChar; // Variable pour stocker le caractère reçu via l'UART
   while (1)
   {
-    // Wait to receive a character from UART
+    // Attendre de recevoir un caractère via l'UART
     if (HAL_UART_Receive(&huart2, &receivedChar, 1, HAL_MAX_DELAY) == HAL_OK)
     {
-      // Convert received character to an index
-      int note_index = receivedChar - 'a'; // assuming 'a' is the first note, 'b' the second, etc.
+      // Convertir le caractère reçu en un index
+      int note_index = receivedChar - 'a'; // en supposant que 'a' est la première note, 'b' la seconde, etc.
 
-      // Check if the index is within the valid range
+      // Vérifier si l'index est dans la plage valide
       if (note_index >= 0 && note_index < NUM_NOTES)
       {
-        // Set PWM frequency to the corresponding note
+        // Régler la fréquence du PWM sur la note correspondante
         set_PWM_frequency(&htim2, TIM_CHANNEL_1, note_frequencies[note_index]);
       }
     }
@@ -135,7 +136,7 @@ int main(void)
 }
 
 /**
-  * @brief System Clock Configuration
+  * @brief Configuration de l'horloge système
   * @retval None
   */
 void SystemClock_Config(void)
@@ -146,6 +147,7 @@ void SystemClock_Config(void)
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
+  // Configuration de l'oscillateur
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -160,11 +162,13 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  // Activation de la suralimentation
   if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  // Configuration des horloges
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -177,23 +181,25 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  // Configuration du Systick
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
-/* TIM2 init function */
+/* Initialisation de TIM2 */
 static void MX_TIM2_Init(void)
 {
   TIM_ClockConfigTypeDef sClockSourceConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
   TIM_OC_InitTypeDef sConfigOC;
 
+  // Configuration du timer 2
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 90-1;
+  htim2.Init.Prescaler = 90-1; // Diviseur de fréquence
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 1000-1;
+  htim2.Init.Period = 1000-1; // Période du timer
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
@@ -206,6 +212,7 @@ static void MX_TIM2_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  // Initialisation du PWM
   if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -227,14 +234,15 @@ static void MX_TIM2_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  // Appel de la fonction pour la configuration post-init du PWM
   HAL_TIM_MspPostInit(&htim2);
 }
 
-/* USART2 init function */
+/* Initialisation de USART2 */
 static void MX_USART2_UART_Init(void)
 {
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
+  huart2.Init.BaudRate = 9600; // Débit en bauds
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -247,39 +255,45 @@ static void MX_USART2_UART_Init(void)
   }
 }
 
+/* Fonction pour régler la fréquence PWM */
 void set_PWM_frequency(TIM_HandleTypeDef *htim, uint32_t channel, uint32_t frequency)
 {
-  uint32_t timer_clock = HAL_RCC_GetPCLK1Freq() * 2;  // APB1 clock frequency
-  uint32_t prescaler = (timer_clock / (frequency * 65536)) + 1;
-  uint32_t period = (timer_clock / (prescaler * frequency)) - 1;
+  uint32_t timer_clock = HAL_RCC_GetPCLK1Freq() * 2;  // Fréquence d'horloge APB1
+  uint32_t prescaler = (timer_clock / (frequency * 65536)) + 1; // Calcul du prescaler
+  uint32_t period = (timer_clock / (prescaler * frequency)) - 1; // Calcul de la période
 
+  // Mise à jour des registres du timer
   htim->Instance->PSC = prescaler - 1;
   htim->Instance->ARR = period;
-  htim->Instance->CCR1 = period / 2;  // 50% duty cycle
+  htim->Instance->CCR1 = period / 2;  // Rapport cyclique de 50%
+
+  // Redémarrage du PWM avec les nouvelles valeurs
   HAL_TIM_PWM_Start(htim, channel);
 }
 
-/** Configure pins as
-        * Analog
-        * Input
-        * Output
+/** Configuration des broches comme
+        * Analogique
+        * Entrée
+        * Sortie
         * EVENT_OUT
         * EXTI
 */
 static void MX_GPIO_Init(void)
 {
+  // Activation des horloges pour les ports GPIO
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 }
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  file: The file name as string.
-  * @param  line: The line in file as a number.
+  * @brief  Cette fonction est exécutée en cas d'erreur.
+  * @param  file: Le nom du fichier sous forme de chaîne.
+  * @param  line: La ligne dans le fichier sous forme de nombre.
   * @retval None
   */
 void _Error_Handler(char *file, int line)
 {
+  // Boucle infinie en cas d'erreur
   while(1)
   {
   }
@@ -287,14 +301,14 @@ void _Error_Handler(char *file, int line)
 
 #ifdef  USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
+  * @brief  Signale le nom du fichier source et le numéro de ligne où l'erreur assert_param a eu lieu.
+  * @param  file: pointeur vers le nom du fichier source.
+  * @param  line: numéro de ligne où l'erreur assert_param a eu lieu.
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
 {
+  // Code pour gérer l'échec des assertions
 }
 #endif /* USE_FULL_ASSERT */
 
